@@ -1,14 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Chat Response</title>
+    <script>
+        function loadDoc() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var response = JSON.parse(this.responseText);
+                    document.getElementById("demo").innerHTML = response.response;
+                }
+            };
+            xhttp.open("GET", "/get_response", true);
+            xhttp.send();
+        }
+
+        // Poll the server every second for updates
+        setInterval(loadDoc, 1000);
+
+        function sendInput() {
+            var user_input = document.getElementById("user_input").value;
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/send_input", true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    // Clear the input box after sending
+                    document.getElementById("user_input").value = '';
+                    // Immediately fetch the updated response after sending input
+                    loadDoc();
+                }
+            };
+            xhttp.send(JSON.stringify({input: user_input}));
+        }
+    </script>
 </head>
 <body>
-    <div>
-        <h1>Homepage</h1>
-        <p>{{response}}</p>
-    </div>
+    <h1>Chat Response</h1>
+    <p id="demo">Waiting for response...</p>
+    <input type="text" id="user_input" placeholder="Enter your message">
+    <button onclick="sendInput()">Send</button>
 </body>
 </html>
