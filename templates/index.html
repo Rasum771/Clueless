@@ -1,44 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat Response</title>
-    <script>
-        function loadDoc() {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    var response = JSON.parse(this.responseText);
-                    document.getElementById("demo").innerHTML = response.response;
-                }
-            };
-            xhttp.open("GET", "/get_response", true);
-            xhttp.send();
-        }
+    <title>Flask-SocketIO Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-        // Poll the server every second for updates
-        setInterval(loadDoc, 1000);
+        socket.on('system_message', function(msg) {
+            var role = msg.role.charAt(0).toUpperCase() + msg.role.slice(1); // Capitalize role
+            var message = role + ': ' + msg.content;
+            var div = document.createElement('div');
+            div.textContent = message;
+            document.getElementById('update_div').appendChild(div);
+        });
 
-        function sendInput() {
-            var user_input = document.getElementById("user_input").value;
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", "/send_input", true);
-            xhttp.setRequestHeader("Content-Type", "application/json");
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    // Clear the input box after sending
-                    document.getElementById("user_input").value = '';
-                    // Immediately fetch the updated response after sending input
-                    loadDoc();
-                }
-            };
-            xhttp.send(JSON.stringify({input: user_input}));
+        socket.on('update_response', function(msg) {
+            var role = 'Bot'; // Assuming responses are from a bot
+            var message = role + ': ' + msg.content;
+            var div = document.createElement('div');
+            div.textContent = message;
+            document.getElementById('update_div').appendChild(div);
+        });
+
+        function sendUserInput() {
+            var user_input = document.getElementById('user_input').value;
+            socket.emit('user_input', { content: user_input });
+            document.getElementById('user_input').value = ''; // Clear input field
         }
     </script>
 </head>
 <body>
-    <h1>Chat Response</h1>
-    <p id="demo">Waiting for response...</p>
-    <input type="text" id="user_input" placeholder="Enter your message">
-    <button onclick="sendInput()">Send</button>
+    <div id="update_div">
+        <!-- Content will be dynamically updated here -->
+    </div>
+    <input type="text" id="user_input" placeholder="Enter your message...">
+    <button onclick="sendUserInput()">Send</button>
 </body>
 </html>
